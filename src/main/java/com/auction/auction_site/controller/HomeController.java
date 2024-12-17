@@ -1,33 +1,30 @@
 package com.auction.auction_site.controller;
 
+import com.auction.auction_site.dto.ApiResponse;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 
-@Controller
+@RestController
 public class HomeController {
     @GetMapping("/")
-    public String home(Model model) {
+    public ResponseEntity<ApiResponse> home() {
         String id = SecurityContextHolder.getContext().getAuthentication().getName();
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
+        Iterator<? extends GrantedAuthority> iterator = authentication.getAuthorities().iterator();
+        String role = iterator.next().getAuthority();
 
-        GrantedAuthority auth = iterator.next();
+        ApiResponse response = new ApiResponse(
+                "home page",
+                Map.of("id", id, "role", role));
 
-        String role = auth.getAuthority();
-
-        model.addAttribute("id", id);
-        model.addAttribute("role", role);
-
-        return "main";
+        return ResponseEntity.ok(response);
     }
 }
