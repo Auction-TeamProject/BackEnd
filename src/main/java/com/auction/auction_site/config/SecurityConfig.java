@@ -2,6 +2,8 @@ package com.auction.auction_site.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,14 +28,11 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
         );
 
-        httpSecurity.formLogin(
-                (auth) -> auth
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
-                        .permitAll()
-        );
+        httpSecurity.formLogin((formLogin) -> formLogin.disable());
 
-//        httpSecurity.csrf((auth) -> auth.disable());
+        httpSecurity.httpBasic((httpBasic) -> httpBasic.disable());
+
+        httpSecurity.csrf((auth) -> auth.disable());
 
         httpSecurity.sessionManagement( // 다중 로그인 설정
                 (auth) -> auth
@@ -48,5 +47,12 @@ public class SecurityConfig {
         );
 
         return httpSecurity.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity
+                .getSharedObject(AuthenticationManagerBuilder.class)
+                .build();
     }
 }
