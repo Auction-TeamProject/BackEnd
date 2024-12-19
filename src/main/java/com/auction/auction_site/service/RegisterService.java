@@ -1,6 +1,7 @@
 package com.auction.auction_site.service;
 
 import com.auction.auction_site.dto.RegisterUserDto;
+import com.auction.auction_site.dto.Role;
 import com.auction.auction_site.entity.User;
 import com.auction.auction_site.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class RegisterService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    public User joinProcess(RegisterUserDto userDto) {
+    public User RegisterProcess(RegisterUserDto userDto) {
         if(userRepository.existsByUsername(userDto.getUsername())) { // 중복 검사
             throw new IllegalStateException("이미 존재하는 회원입니다.");
         } else {
@@ -24,7 +25,7 @@ public class RegisterService {
             user.setPhoneNumber(userDto.getPhoneNumber());
             user.setAddress(userDto.getAddress());
             user.setAccountNumber(userDto.getAccountNumber());
-            user.setRole("ROLE_USER");
+            user.setRole(Role.ROLE_USER);
 
             userRepository.save(user);
 

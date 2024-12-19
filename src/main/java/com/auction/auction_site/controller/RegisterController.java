@@ -23,7 +23,7 @@ public class RegisterController {
 
     @PostMapping
     public ResponseEntity<ApiResponse> join(@RequestBody RegisterUserDto userDto) {
-        User user = joinService.joinProcess(userDto);
+        User user = joinService.RegisterProcess(userDto);
 
         // ApiResponse 생성
         ApiResponse response = new ApiResponse(
