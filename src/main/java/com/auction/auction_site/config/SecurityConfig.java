@@ -9,6 +9,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * 스프링 시큐리티 설정
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -19,7 +22,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-
         httpSecurity.authorizeHttpRequests(
                 (auth) -> auth
                         .requestMatchers("/", "/login", "/join").permitAll()
