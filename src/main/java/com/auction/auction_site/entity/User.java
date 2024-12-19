@@ -1,5 +1,6 @@
 package com.auction.auction_site.entity;
 
+import com.auction.auction_site.dto.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,5 +26,6 @@ public class User {
 
     private String accountNumber;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 }
