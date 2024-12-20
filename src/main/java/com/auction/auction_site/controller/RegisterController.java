@@ -11,19 +11,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/join")
+@RequestMapping("/register")
 @RequiredArgsConstructor
 public class RegisterController {
-    private final RegisterService joinService;
+    private final RegisterService registerService;
 
     @GetMapping
-    public String join() {
-        return "join page";
+    public String register() {
+        return "register page";
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse> join(@RequestBody RegisterUserDto userDto) {
-        User user = joinService.RegisterProcess(userDto);
+    public ResponseEntity<ApiResponse> register(@RequestBody RegisterUserDto registerUserDto) {
+        RegisterUserDto user = registerService.RegisterProcess(registerUserDto);
 
         // ApiResponse 생성
         ApiResponse response = new ApiResponse(
