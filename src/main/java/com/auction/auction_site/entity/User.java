@@ -2,22 +2,27 @@ package com.auction.auction_site.entity;
 
 import com.auction.auction_site.dto.Role;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(name = "UNIQUE",
+                columnNames = {"password", "nickname", "phoneNumber", "accountNumber"})})
 @Getter @Setter
+@Builder
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true) // 중복 방지
     private int id;
 
     private String username;
 
     private String password;
 
-    @Column(unique = true) // 중복 방지
     private String nickname;
 
     private String phoneNumber;
@@ -27,5 +32,8 @@ public class User {
     private String accountNumber;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @Builder.Default
+    private Role role = Role.ROLE_USER;
+
+    public User() {}
 }
