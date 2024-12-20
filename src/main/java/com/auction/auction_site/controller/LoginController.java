@@ -5,26 +5,24 @@ import com.auction.auction_site.dto.LoginUserDto;
 import com.auction.auction_site.service.LoginService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/login")
 @RequiredArgsConstructor
 public class LoginController {
     private final LoginService loginService;
-    @GetMapping("/login")
+    @GetMapping
     public String login() {
-        return "login";
+        return "login page";
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@RequestBody LoginUserDto userDto) {
-        loginService.authenticate(userDto.getUsername(), userDto.getPassword());
+    @PostMapping
+    public ResponseEntity<ApiResponse> login(@RequestBody LoginUserDto loginUserDto) {
+        loginService.authenticate(loginUserDto.getUsername(), loginUserDto.getPassword());
 
         // ApiResponse 생성
-        ApiResponse response = new ApiResponse("로그인 성공", userDto.getUsername());
+        ApiResponse response = new ApiResponse("로그인 성공", loginUserDto.getUsername());
 
         return ResponseEntity.ok(response);
     }
