@@ -1,35 +1,36 @@
 package com.auction.auction_site.service;
 
 import com.auction.auction_site.dto.RegisterUserDto;
-import com.auction.auction_site.dto.Role;
 import com.auction.auction_site.entity.User;
 import com.auction.auction_site.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RegisterService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    public User RegisterProcess(RegisterUserDto userDto) {
-        if(userRepository.existsByUsername(userDto.getUsername())) { // 중복 검사
+
+    public RegisterUserDto RegisterProcess(RegisterUserDto registerUserDto) {
+        if(userRepository.existsByUsername(registerUserDto.getUsername())) { // 중복 검사
             throw new IllegalStateException("이미 존재하는 회원입니다.");
-        } else {
-            User user = new User();
-
-            user.setUsername(userDto.getUsername());
-            user.setPassword(bCryptPasswordEncoder.encode(userDto.getPassword())); // 비밀번호 암호화
-            user.setNickname(userDto.getNickname());
-            user.setPhoneNumber(userDto.getPhoneNumber());
-            user.setAddress(userDto.getAddress());
-            user.setAccountNumber(userDto.getAccountNumber());
-            user.setRole(Role.ROLE_USER);
-
-            userRepository.save(user);
-
-            return user;
         }
+
+        User user = User.builder()
+                .username(registerUserDto.getUsername())
+                .password(bCryptPasswordEncoder.encode(registerUserDto.getPassword()))
+                .nickname(registerUserDto.getNickname())
+                .phoneNumber(registerUserDto.getPhoneNumber())
+                .address(registerUserDto.getAddress())
+                .accountNumber(registerUserDto.getAccountNumber())
+                .build();
+
+        userRepository.save(user);
+
+        return RegisterUserDto.fromUser(user);
     }
 }
