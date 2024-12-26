@@ -8,28 +8,26 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(uniqueConstraints = {
-        @UniqueConstraint(name = "UNIQUE",
-                columnNames = {"password", "nickname", "phoneNumber", "accountNumber"})})
+//@Table(uniqueConstraints = {
+//        @UniqueConstraint(name = "UNIQUE", columnNames = {"password", "nickname"})
+//})
 @Getter @Setter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     private String username;
 
+    private String name;
+
+    //    private String nickname;
+
+    private String email;
+
     private String password;
-
-    private String nickname;
-
-    private String phoneNumber;
-
-    private String address;
-
-    private String accountNumber;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
