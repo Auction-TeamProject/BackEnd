@@ -1,8 +1,7 @@
-package com.auction.auction_site.filter;
+package com.auction.auction_site.security.spring_security;
 
-import com.auction.auction_site.dto.CustomUserDetails;
 import com.auction.auction_site.dto.LoginUserDto;
-import com.auction.auction_site.jwt.JWTUtil;
+import com.auction.auction_site.security.jwt.JWTUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +19,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class LoginFilter extends AbstractAuthenticationProcessingFilter {
+public class CustomJsonLoginFilter extends AbstractAuthenticationProcessingFilter {
     private final JWTUtil jwtUtil;
 
     // 해당 필터가 적용되는 요청
@@ -34,7 +33,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private final ObjectMapper objectMapper;
 
-    public LoginFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper, JWTUtil jwtUtil) {
+    public CustomJsonLoginFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper, JWTUtil jwtUtil) {
         super(DEFAULT_LOGIN_PATH_REQUEST_MATCHER);
         this.setAuthenticationManager(authenticationManager);
         this.objectMapper = objectMapper;
@@ -74,22 +73,6 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain, Authentication authentication) throws IOException {
-        /*
-        // 세션
-
-        // 인증 성공 시, SecurityContext에 저장
-        SecurityContextHolder.getContext().setAuthentication(authResult);
-
-        // 세션 생성 및 SecurityContext 저장
-        HttpSession session = request.getSession(true);
-        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                SecurityContextHolder.getContext());
-
-        // 기본적인 성공 응답
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write("Login successful with session ID: " + session.getId());
-        */
-
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String username = userDetails.getUsername();
 
@@ -101,8 +84,6 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
         String token = jwtUtil.createJwt(username, role, 60*60*1000L);
 
-//        response.addCookie(createCookie("Authorization", token));
-
         response.addHeader("Authorization", "Bearer " + token);
 
         response.getWriter().write("Login successful with session ID");
@@ -113,15 +94,4 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
                                               AuthenticationException failed) throws IOException {
         response.setStatus(401);
     }
-
-//    private Cookie createCookie(String key, String value) {
-//
-//        Cookie cookie = new Cookie(key, value);
-//        cookie.setMaxAge(60*60*60);
-//        //cookie.setSecure(true);
-//        cookie.setPath("/");
-//        cookie.setHttpOnly(true);
-//
-//        return cookie;
-//    }
 }

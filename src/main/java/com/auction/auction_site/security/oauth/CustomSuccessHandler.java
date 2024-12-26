@@ -1,6 +1,6 @@
-package com.auction.auction_site.oauth2;
+package com.auction.auction_site.security.oauth;
 
-import com.auction.auction_site.jwt.JWTUtil;
+import com.auction.auction_site.security.jwt.JWTUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,27 +35,15 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String token = jwtUtil.createJwt(username, role, 60*60*60L);
 
         response.addCookie(createCookie("Authorization", token));
-        response.sendRedirect("http://localhost:3000/");
-
-//        // JSON 응답 생성
-//        response.setContentType("application/json");
-//        response.setCharacterEncoding("UTF-8");
-//
-//        Map<String, Object> jsonResponse = new HashMap<>();
-//        jsonResponse.put("username", username);
-//        jsonResponse.put("role", role);
-//
-//        ObjectMapper objectMapper = new ObjectMapper(); // JSON 변환 도구
-//        String json = objectMapper.writeValueAsString(jsonResponse);
-//
-//        response.getWriter().write(json);
+        
+//        response.sendRedirect("http://localhost:3000/");
     }
 
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(60*60*60);
-        //cookie.setSecure(true);
+//        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
 

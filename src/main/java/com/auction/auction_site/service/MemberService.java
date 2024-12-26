@@ -63,22 +63,5 @@ public class MemberService {
         User findUser = userRepository.findById(id).orElseThrow(() -> new EntityNotFound("User with id " + id + " not found"));
 
         userRepository.delete(findUser);
-
-        // 세션 수동 무효화
-        HttpSession session = request.getSession(false);
-
-
-        if (session != null) {
-            session.invalidate();
-
-            Cookie cookie = new Cookie("JSESSIONID", null);
-            cookie.setMaxAge(0);  // 쿠키 삭제
-            cookie.setPath("/");  // 도메인 경로 설정
-
-            response.addCookie(cookie);
-        }
-
-        // SecurityContext에서 인증 정보 제거
-        SecurityContextHolder.clearContext();
     }
 }

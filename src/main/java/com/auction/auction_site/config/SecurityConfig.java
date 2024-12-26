@@ -1,11 +1,10 @@
 package com.auction.auction_site.config;
 
-//import com.auction.auction_site.CustomLogoutSuccessHandler;
-import com.auction.auction_site.jwt.JWTFilter;
-import com.auction.auction_site.jwt.JWTUtil;
-import com.auction.auction_site.oauth2.CustomSuccessHandler;
-import com.auction.auction_site.filter.LoginFilter;
-import com.auction.auction_site.oauth2.CustomOAuth2UserService;
+import com.auction.auction_site.security.jwt.JWTFilter;
+import com.auction.auction_site.security.jwt.JWTUtil;
+import com.auction.auction_site.security.oauth.CustomSuccessHandler;
+import com.auction.auction_site.security.oauth.CustomOAuth2UserService;
+import com.auction.auction_site.security.spring_security.CustomJsonLoginFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +15,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -53,10 +51,10 @@ public class SecurityConfig {
         httpSecurity.csrf((auth) -> auth.disable());
 
         httpSecurity.addFilterBefore(
-                new LoginFilter(authenticationManager(httpSecurity), objectMapper, jwtUtil),
+                new CustomJsonLoginFilter(authenticationManager(httpSecurity), objectMapper, jwtUtil),
                 UsernamePasswordAuthenticationFilter.class);
 
-        httpSecurity.addFilterAfter(new JWTFilter(jwtUtil), LoginFilter.class);
+        httpSecurity.addFilterAfter(new JWTFilter(jwtUtil), CustomJsonLoginFilter.class);
 
         httpSecurity.oauth2Login(
                 (ouath2) -> ouath2
@@ -69,34 +67,12 @@ public class SecurityConfig {
                 (auth) -> auth
                         .requestMatchers("/", "/oauth2/**", "/login/**", "/members").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
-                        .requestMatchers("/myPage/**").hasAnyRole("ADMIN", "USER")
                         .anyRequest().authenticated()
         );
-
 
         httpSecurity.sessionManagement(
                 (session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-//        httpSecurity.sessionManagement( // 다중 로그인 설정
-//                (auth) -> auth
-//                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-//                        .maximumSessions(1)
-//                        .maxSessionsPreventsLogin(true) // 다중 로그인 개수를 초과하였을 경우 새로운 로그인 차단
-//        );
-//
-//        httpSecurity.sessionManagement( // 세션 고정 보호
-//                (auth) -> auth
-//                        .sessionFixation()
-//                        .changeSessionId() // 로그인 시 동일한 세션에 대한 ID 변경
-//        );
-//
-//        httpSecurity.logout(logout -> logout
-//                        .logoutUrl("/logout") // 로그아웃 요청 URL
-////                .logoutSuccessHandler(new CustomLogoutSuccessHandler()) // 커스텀 성공 핸들러
-//                        .deleteCookies("JSESSIONID") // 쿠키 삭제
-//                        .invalidateHttpSession(true) // 세션 무효화
-//        );
 
         return httpSecurity.build();
     }
