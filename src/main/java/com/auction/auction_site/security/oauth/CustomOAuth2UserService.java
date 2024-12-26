@@ -1,6 +1,10 @@
-package com.auction.auction_site.oauth2;
+package com.auction.auction_site.security.oauth;
 
 import com.auction.auction_site.dto.*;
+import com.auction.auction_site.dto.oauth.GoogleResponse;
+import com.auction.auction_site.dto.oauth.KakaoResponse;
+import com.auction.auction_site.dto.oauth.NaverResponse;
+import com.auction.auction_site.dto.oauth.OAuth2Response;
 import com.auction.auction_site.entity.User;
 import com.auction.auction_site.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

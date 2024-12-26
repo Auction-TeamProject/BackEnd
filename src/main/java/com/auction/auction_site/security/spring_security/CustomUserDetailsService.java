@@ -1,6 +1,5 @@
-package com.auction.auction_site.service;
+package com.auction.auction_site.security.spring_security;
 
-import com.auction.auction_site.dto.CustomUserDetails;
 import com.auction.auction_site.entity.User;
 import com.auction.auction_site.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

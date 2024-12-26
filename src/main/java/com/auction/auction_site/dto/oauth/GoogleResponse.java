@@ -1,4 +1,4 @@
-package com.auction.auction_site.dto;
+package com.auction.auction_site.dto.oauth;
 
 import java.util.Map;
 

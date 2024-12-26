@@ -1,8 +1,8 @@
-package com.auction.auction_site.jwt;
+package com.auction.auction_site.security.jwt;
 
-import com.auction.auction_site.dto.Role;
+import com.auction.auction_site.entity.Role;
 import com.auction.auction_site.dto.UserDto;
-import com.auction.auction_site.oauth2.CustomOAuth2User;
+import com.auction.auction_site.security.oauth.CustomOAuth2User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

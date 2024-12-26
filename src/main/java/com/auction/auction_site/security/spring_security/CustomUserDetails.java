@@ -1,4 +1,4 @@
-package com.auction.auction_site.dto;
+package com.auction.auction_site.security.spring_security;
 
 import com.auction.auction_site.entity.User;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,4 +1,4 @@
-package com.auction.auction_site.oauth2;
+package com.auction.auction_site.security.oauth;
 
 import com.auction.auction_site.dto.UserDto;
 import lombok.RequiredArgsConstructor;

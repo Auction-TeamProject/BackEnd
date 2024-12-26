@@ -1,4 +1,4 @@
-package com.auction.auction_site.dto;
+package com.auction.auction_site.dto.oauth;
 
 public interface OAuth2Response {
     // 제공자(구글, 네이버)

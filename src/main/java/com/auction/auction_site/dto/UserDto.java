@@ -1,5 +1,6 @@
 package com.auction.auction_site.dto;
 
+import com.auction.auction_site.entity.Role;
 import com.auction.auction_site.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

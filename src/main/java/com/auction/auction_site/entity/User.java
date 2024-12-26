@@ -1,6 +1,5 @@
 package com.auction.auction_site.entity;
 
-import com.auction.auction_site.dto.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
