@@ -17,13 +17,13 @@ public class LoginController {
         return "login page";
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse> login(@RequestBody LoginUserDto loginUserDto) {
-        loginService.authenticate(loginUserDto.getUsername(), loginUserDto.getPassword());
-
-        // ApiResponse 생성
-        ApiResponse response = new ApiResponse("로그인 성공", loginUserDto.getUsername());
-
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping
+//    public ResponseEntity<ApiResponse> login(@RequestBody LoginUserDto loginUserDto) {
+//        loginService.authenticate(loginUserDto.getUsername(), loginUserDto.getPassword());
+//
+//        // ApiResponse 생성
+//        ApiResponse response = new ApiResponse("로그인 성공", loginUserDto.getUsername());
+//
+//        return ResponseEntity.ok(response);
+//    }
 }
