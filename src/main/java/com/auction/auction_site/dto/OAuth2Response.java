@@ -1,0 +1,15 @@
+package com.auction.auction_site.dto;
+
+public interface OAuth2Response {
+    // 제공자(구글, 네이버)
+    String getProvider();
+
+    // 제공자에서 발급해주는 사용자를 식별하기 위한 고유 ID
+    String getProviderId();
+
+    // 사용자 이메일
+    String getEmail();
+
+    // 사용자명
+    String getName();
+}
