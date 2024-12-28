@@ -1,9 +1,12 @@
 package com.auction.auction_site.security.spring_security;
 
 import com.auction.auction_site.dto.LoginUserDto;
+import com.auction.auction_site.entity.RefreshToken;
+import com.auction.auction_site.repository.RefreshTokenRepository;
 import com.auction.auction_site.security.jwt.JWTUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,16 +14,17 @@ import org.springframework.security.authentication.AuthenticationServiceExceptio
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.StringUtils;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.Date;
+
+import static com.auction.auction_site.config.ConstantConfig.*;
 
 public class CustomJsonLoginFilter extends AbstractAuthenticationProcessingFilter {
     private final JWTUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     // 해당 필터가 적용되는 요청
     private static final String DEFAULT_LOGIN_REQUEST_URL = "/login";
@@ -33,11 +37,13 @@ public class CustomJsonLoginFilter extends AbstractAuthenticationProcessingFilte
 
     private final ObjectMapper objectMapper;
 
-    public CustomJsonLoginFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper, JWTUtil jwtUtil) {
+    public CustomJsonLoginFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper,
+                                 JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
         super(DEFAULT_LOGIN_PATH_REQUEST_MATCHER);
         this.setAuthenticationManager(authenticationManager);
         this.objectMapper = objectMapper;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     // 로그인 요청이 들어올 때 실행되는 메서드
@@ -76,22 +82,37 @@ public class CustomJsonLoginFilter extends AbstractAuthenticationProcessingFilte
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String username = userDetails.getUsername();
 
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
-        GrantedAuthority auth = iterator.next();
+        String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        String role = auth.getAuthority();
+        String accessToken = jwtUtil.createJwt("access", username, role, ACCESS_EXPIRED_MS);
+        String refreshToken = jwtUtil.createJwt("refresh", username, role, REFRESH_EXPIRED_MS);
 
-        String token = jwtUtil.createJwt(username, role, 60*60*1000L);
+        RefreshToken refreshTokenEntity = RefreshToken.builder()
+                .username(username)
+                .refreshToken(refreshToken)
+                .expiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRED_MS))
+                .build();
 
-        response.addHeader("Authorization", "Bearer " + token);
+        refreshTokenRepository.save(refreshTokenEntity);
 
-        response.getWriter().write("Login successful with session ID");
+        response.addHeader("Authorization", "Bearer " + accessToken);
+        response.addCookie(createCookie("refresh", refreshToken));
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().write("Normal Login successful");
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-                                              AuthenticationException failed) throws IOException {
+                                              AuthenticationException failed) {
         response.setStatus(401);
+    }
+
+    private Cookie createCookie(String key, String value) {
+        Cookie cookie = new Cookie(key, value);
+
+        cookie.setMaxAge(COOKIE_MAX_AGE);
+        cookie.setHttpOnly(true);
+
+        return cookie;
     }
 }

@@ -1,51 +1,59 @@
 package com.auction.auction_site.security.oauth;
 
+import com.auction.auction_site.config.ConstantConfig;
+import com.auction.auction_site.entity.RefreshToken;
+import com.auction.auction_site.repository.RefreshTokenRepository;
 import com.auction.auction_site.security.jwt.JWTUtil;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.Date;
+
+import static com.auction.auction_site.config.ConstantConfig.COOKIE_MAX_AGE;
+import static com.auction.auction_site.config.ConstantConfig.REFRESH_EXPIRED_MS;
 
 @Component
 @RequiredArgsConstructor
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final JWTUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         // OAuth2User
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
 
         String username = customUserDetails.getUsername();
 
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
-        GrantedAuthority auth = iterator.next();
-        String role = auth.getAuthority();
+        String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        String token = jwtUtil.createJwt(username, role, 60*60*60L);
+        String refreshToken = jwtUtil.createJwt("refresh", username, role, ConstantConfig.REFRESH_EXPIRED_MS);
 
-        response.addCookie(createCookie("Authorization", token));
-        
+        response.addCookie(createCookie("Authorization", refreshToken));
+
+        RefreshToken refreshTokenEntity = RefreshToken.builder()
+                .username(username)
+                .refreshToken(refreshToken)
+                .expiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRED_MS))
+                .build();
+
+        refreshTokenRepository.save(refreshTokenEntity);
+
 //        response.sendRedirect("http://localhost:3000/");
     }
 
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(60*60*60);
-//        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setMaxAge(COOKIE_MAX_AGE);
+//        cookie.setSecure(true); // HTTPS 통신을 진행할 경우 추가
+        cookie.setPath("/"); // 쿠키가 적용될 범위
+        cookie.setHttpOnly(true); // 자바스크립 공격 방지를 위해 추가
 
         return cookie;
     }
