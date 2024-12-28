@@ -12,7 +12,7 @@ import java.util.Date;
 public class RefreshTokenCleanupScheduler {
     private final RefreshTokenRepository refreshTokenRepository;
 
-    @Scheduled(cron = "0 0 2 * * ?") // 매일 해당 시간에 해당 메서드 실행
+    @Scheduled(cron = "0 0 2 * * ?") // 스케줄러 작업 정의 - 매일 해당 시간에 해당 메서드 실행
     public void deleteExpiredTokens() {
         Date now = new Date();
         refreshTokenRepository.deleteExpiredRefresh(now);
