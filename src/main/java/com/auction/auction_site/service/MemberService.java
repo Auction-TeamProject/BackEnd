@@ -1,67 +1,75 @@
 package com.auction.auction_site.service;
 
-import com.auction.auction_site.exception.EntityNotFound;
-import com.auction.auction_site.dto.UserDto;
-import com.auction.auction_site.entity.User;
-import com.auction.auction_site.repository.UserRepository;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import com.auction.auction_site.dto.MemberDto;
+import com.auction.auction_site.dto.UpdateMemberDto;
+import com.auction.auction_site.entity.Member;
+import com.auction.auction_site.repository.MemberRepository;
+import com.auction.auction_site.repository.RefreshTokenRepository;
+import com.auction.auction_site.security.jwt.JWTUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class MemberService {
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final JWTUtil jwtUtil;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public UserDto registerProcess(UserDto userDto) {
-        if(userRepository.existsByUsername(userDto.getUsername())) { // 중복 검사
+    public boolean checkLoginId(String loginId) {
+        return memberRepository.existsByLoginId(loginId);
+    }
+
+    public boolean checkNickname(String nickname) {
+        return memberRepository.existsByNickname(nickname);
+    }
+
+    public MemberDto registerProcess(MemberDto memberDto) {
+        if(memberRepository.existsByLoginId(memberDto.getLoginId())) { // 중복 검사
             throw new IllegalStateException("이미 존재하는 회원입니다.");
         }
 
-        User user = User.builder()
-                .username(userDto.getUsername())
-                .password(bCryptPasswordEncoder.encode(userDto.getPassword()))
-//                .nickname(userDto.getNickname())
-                .email(userDto.getEmail())
+        Member member = Member.builder()
+                .loginId(memberDto.getLoginId())
+                .password(bCryptPasswordEncoder.encode(memberDto.getPassword()))
+                .name(memberDto.getName())
+                .nickname(memberDto.getNickname())
+                .registerDate(LocalDate.now())
                 .build();
 
-        userRepository.save(user);
+        memberRepository.save(member);
 
-        return UserDto.fromUser(user);
+        return memberDto.fromMember(member);
     }
 
-    public UserDto updateMember(Long id, UserDto userDto) {
-        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFound("User with id " + id + " not found"));
+    @Transactional
+    public MemberDto updateMember(UpdateMemberDto updateMemberDto, String token) {
+//        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFound("User with id " + id + " not found"));
 
-        if (userDto.getUsername() != null) {
-            user.setUsername(userDto.getUsername());
-        }
-        if (userDto.getPassword() != null) {
-            user.setPassword(userDto.getPassword());
-        }
-        if (userDto.getEmail() != null) {
-            user.setEmail(userDto.getEmail());
-        }
-//        if (userDto.getNickname() != null) {
-//            user.setNickname(userDto.getNickname());
-//        }
+        String loginId = jwtUtil.getLoginId(token);
 
-        userRepository.save(user);
+        Member member = memberRepository.findByLoginId(loginId);
 
-        return UserDto.fromUser(user);
+        member.setNickname(updateMemberDto.getNickname());
+        member.setPassword(bCryptPasswordEncoder.encode(updateMemberDto.getPassword()));
+
+        return MemberDto.fromMember(member);
     }
 
-    public void deleteProcess(Long id, HttpServletRequest request, HttpServletResponse response) {
-        User findUser = userRepository.findById(id).orElseThrow(() -> new EntityNotFound("User with id " + id + " not found"));
+    @Transactional
+    public void deleteProcess(String token) {
+        String loginId = jwtUtil.getLoginId(token);
 
-        userRepository.delete(findUser);
+        Member findMember = memberRepository.findByLoginId(loginId);
+
+        memberRepository.delete(findMember);
+        refreshTokenRepository.deleteByLoginId(loginId);
     }
 }

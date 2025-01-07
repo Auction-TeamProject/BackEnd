@@ -3,15 +3,14 @@ package com.auction.auction_site.config;
 import com.auction.auction_site.repository.RefreshTokenRepository;
 import com.auction.auction_site.security.jwt.JWTFilter;
 import com.auction.auction_site.security.jwt.JWTUtil;
-import com.auction.auction_site.security.oauth.CustomSuccessHandler;
 import com.auction.auction_site.security.oauth.CustomOAuth2UserService;
+import com.auction.auction_site.security.oauth.CustomSuccessHandler;
 import com.auction.auction_site.security.spring_security.CustomJsonLoginFilter;
 import com.auction.auction_site.security.spring_security.CustomLogoutFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -63,19 +62,18 @@ public class SecurityConfig {
         httpSecurity.addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshTokenRepository), LogoutFilter.class);
 
         httpSecurity.oauth2Login(
-                (ouath2) -> ouath2
+                (oauth2) -> oauth2
                         .userInfoEndpoint(
                                 userInfoEndpointConfig -> userInfoEndpointConfig.userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
         );
 
+
         httpSecurity.authorizeHttpRequests(
                 (auth) -> auth
-                        .requestMatchers("/", "/oauth2/**", "/login/**", "/members", "/reissue").permitAll()
+                        .requestMatchers("/", "/oauth2/**", "/login/**", "/members",
+                                "/members/id", "members/nickname", "/reissue").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/products/{id}","/products" ).permitAll() // GET 요청에 대해 모든 사용자 허용
-
-
                         .anyRequest().authenticated()
         );
 
