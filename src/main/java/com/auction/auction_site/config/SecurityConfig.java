@@ -1,5 +1,6 @@
 package com.auction.auction_site.config;
 
+import com.auction.auction_site.security.spring_security.CustomAuthenticationEntryPoint;
 import com.auction.auction_site.repository.RefreshTokenRepository;
 import com.auction.auction_site.security.jwt.JWTFilter;
 import com.auction.auction_site.security.jwt.JWTUtil;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() { // 암호화
@@ -76,6 +78,10 @@ public class SecurityConfig {
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()
         );
+
+        // 인증 실패하거나 인증 정보가 없으면 로그인 페이지가 아닌 JSON 응답하도록 설정
+        httpSecurity.exceptionHandling(exception ->
+                exception.authenticationEntryPoint(customAuthenticationEntryPoint));
 
         httpSecurity.sessionManagement(
                 (session) -> session
