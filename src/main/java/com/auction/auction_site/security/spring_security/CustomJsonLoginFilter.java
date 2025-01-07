@@ -1,6 +1,8 @@
 package com.auction.auction_site.security.spring_security;
 
-import com.auction.auction_site.dto.LoginUserDto;
+import com.auction.auction_site.dto.ApiResponse;
+import com.auction.auction_site.dto.ErrorResponse;
+import com.auction.auction_site.dto.LoginMemberDto;
 import com.auction.auction_site.entity.RefreshToken;
 import com.auction.auction_site.repository.RefreshTokenRepository;
 import com.auction.auction_site.security.jwt.JWTUtil;
@@ -17,11 +19,16 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.StringUtils;
+
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 
 import static com.auction.auction_site.config.ConstantConfig.*;
 
+/**
+ * 폼 로그인 방식이 아닌 JSON 방식으로 데이터를 주고받으며 로그인 처리를 하기 위해 커스텀 필터 생성
+ */
 public class CustomJsonLoginFilter extends AbstractAuthenticationProcessingFilter {
     private final JWTUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -55,16 +62,16 @@ public class CustomJsonLoginFilter extends AbstractAuthenticationProcessingFilte
         }
 
         // JSON 데이터를 LoginUserDto 객체로 변환
-        LoginUserDto loginDto = objectMapper.readValue(request.getInputStream(), LoginUserDto.class);
+        LoginMemberDto loginMemberDto = objectMapper.readValue(request.getInputStream(), LoginMemberDto.class);
 
         // 유효성 검사
-        if (!StringUtils.hasText(loginDto.getUsername()) || !StringUtils.hasText(loginDto.getPassword())) {
+        if (!StringUtils.hasText(loginMemberDto.getLoginId()) || !StringUtils.hasText(loginMemberDto.getPassword())) {
             throw new AuthenticationServiceException("Username or Password is missing");
         }
 
         // Authentication 생성
         UsernamePasswordAuthenticationToken authRequest =
-                new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
+                new UsernamePasswordAuthenticationToken(loginMemberDto.getLoginId(), loginMemberDto.getPassword());
 
         // 인증 요청 객체에 추가 정보 설정??
         setDetails(request, authRequest);
@@ -79,36 +86,56 @@ public class CustomJsonLoginFilter extends AbstractAuthenticationProcessingFilte
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain, Authentication authentication) throws IOException {
+        // username 정보 가져오기
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String username = userDetails.getUsername();
+        String loginId = userDetails.getUsername();
 
+        // role 정보 가져오기
         String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        String accessToken = jwtUtil.createJwt("access", username, role, ACCESS_EXPIRED_MS);
-        String refreshToken = jwtUtil.createJwt("refresh", username, role, REFRESH_EXPIRED_MS);
+        // JWT 토큰(access, refresh) 생성
+        String accessToken = jwtUtil.createJwt("access", loginId, role, ACCESS_EXPIRED_MS);
+        String refreshToken = jwtUtil.createJwt("refresh", loginId, role, REFRESH_EXPIRED_MS);
 
         RefreshToken refreshTokenEntity = RefreshToken.builder()
-                .username(username)
+                .loginId(loginId)
                 .refreshToken(refreshToken)
                 .expiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRED_MS))
                 .build();
 
         refreshTokenRepository.save(refreshTokenEntity);
 
+
+        HashMap<String, Object> hashMap = new HashMap<>();
+        hashMap.put("loginId", loginId);
+        hashMap.put("role", role);
+
+        response.setCharacterEncoding("UTF-8");
         response.addHeader("Authorization", "Bearer " + accessToken);
-        response.addCookie(createCookie("refresh", refreshToken));
+        response.addCookie(createCookie(refreshToken));
+        response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write("Normal Login successful");
+        ApiResponse apiResponse = new ApiResponse("로그인 성공", hashMap);
+        String json = objectMapper.writeValueAsString(apiResponse);
+
+        response.getWriter().write(json);
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-                                              AuthenticationException failed) {
-        response.setStatus(401);
+                                              AuthenticationException failed) throws IOException {
+        ErrorResponse errorResponse = new ErrorResponse("AUTH_FAILED", "로그인 실패");
+
+        String json = objectMapper.writeValueAsString(errorResponse);
+
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write(json);
     }
 
-    private Cookie createCookie(String key, String value) {
-        Cookie cookie = new Cookie(key, value);
+    private Cookie createCookie(String value) {
+        Cookie cookie = new Cookie("refresh", value);
 
         cookie.setMaxAge(COOKIE_MAX_AGE);
         cookie.setHttpOnly(true);
