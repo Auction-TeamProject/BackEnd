@@ -1,5 +1,8 @@
 package com.auction.auction_site.dto.product;
 
+import lombok.Getter;
+
+@Getter
 public class ProductApiResponse<T> {
 
     private String status;
