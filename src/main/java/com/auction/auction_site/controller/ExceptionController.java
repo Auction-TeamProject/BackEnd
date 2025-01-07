@@ -5,14 +5,10 @@ import com.auction.auction_site.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
-@RestController
-@ControllerAdvice
+@RestControllerAdvice
 public class ExceptionController { // 예외 처리용 컨트롤러
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler
