@@ -12,4 +12,7 @@ public interface OAuth2Response {
 
     // 사용자명
     String getName();
+
+    // 사용자 닉네임
+    String getNickname();
 }

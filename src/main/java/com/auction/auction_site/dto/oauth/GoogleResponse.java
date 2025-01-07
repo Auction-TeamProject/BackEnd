@@ -1,6 +1,7 @@
 package com.auction.auction_site.dto.oauth;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class GoogleResponse implements OAuth2Response {
     private final Map<String, Object> attribute;
@@ -28,4 +29,7 @@ public class GoogleResponse implements OAuth2Response {
     public String getName() {
         return attribute.get("name").toString();
     }
+
+    @Override
+    public String getNickname() { return UUID.randomUUID().toString(); }
 }

@@ -28,10 +28,10 @@ public class JWTUtil {
                 .getPayload().get("category", String.class); // 파싱된 JWT 페이로드에서 해당 클레임 가져옴
     }
 
-    public String getUsername(String token) {
+    public String getLoginId(String token) {
         return Jwts.parser().verifyWith(secretKey).build() // JWT 토큰를 파싱하면서 서명 검증을 진행
                 .parseSignedClaims(token) // JWT 토큰을 파싱하면서 서명된 클레임을 추출
-                .getPayload().get("username", String.class); // 파싱된 JWT 페이로드에서 해당 클레임 가져옴
+                .getPayload().get("loginId", String.class); // 파싱된 JWT 페이로드에서 해당 클레임 가져옴
     }
 
     public String getRole(String token) {
@@ -47,10 +47,10 @@ public class JWTUtil {
     }
 
     // 새로운 JWT 토큰을 생성하는 createJwt
-    public String createJwt(String category, String username, String role, Long expiredMs) {
+    public String createJwt(String category, String loginId, String role, Long expiredMs) {
         return Jwts.builder()
                 .claim("category", category)
-                .claim("username", username)
+                .claim("loginId", loginId)
                 .claim("role", role)
                 .issuedAt(new Date(System.currentTimeMillis())) // 현재 시각으로 JWT 발행일자를 설정
                 .expiration(new Date(System.currentTimeMillis() + expiredMs)) // JWT 만료일자 설정

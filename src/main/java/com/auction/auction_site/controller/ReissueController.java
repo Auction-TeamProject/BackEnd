@@ -22,8 +22,8 @@ import static com.auction.auction_site.config.ConstantConfig.*;
  * - 해당 컨트롤러는 전달받은 Refresh 토큰을 받아 새로운 Access 토큰을 응답하는 컨트롤러
  *
  * - 도입이유
- * 서버측에서 JWTFilter 해당 필터를 통해 Access 토큰 만료로 인한 특정 상태 코드를 응답하면?
- * 프론트측에서 예외 핸들라러 Access 토큰 재발행을 위한 Refresh 토큰을 전달
+ * 서버측에서 JWTFilter를 통해 Access 토큰 만료로 인한 특정 상태 코드를 응답하면?
+ * 프론트측에서 예외 핸들러로Access 토큰 재발행을 위한 Refresh 토큰을 전달
  * 서버측은 전달받은 Refresh 토큰을 받아 새로운 Access 토큰을 응답
  *
  * + 추가
@@ -40,11 +40,10 @@ public class ReissueController {
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = null;
 
-
         Cookie[] cookies = request.getCookies();
 
         for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("refresh")) {
+            if (cookie.getName().equals("Authorization")) {
                 refreshToken = cookie.getValue();
             }
         }
@@ -59,36 +58,41 @@ public class ReissueController {
             return new ResponseEntity<>("refresh token expired", HttpStatus.BAD_REQUEST);
         }
 
-        String category = jwtUtil.getCategory(refreshToken);
+        String category = jwtUtil.getCategory(refreshToken); // Refresh 토큰의 category 값 가져오기
 
         if(!category.equals("refresh")) { // JWT 토큰이 Refresh 토큰인지 확인
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 
-        String username = jwtUtil.getUsername(refreshToken);
+        // Refresh 토큰에서 username, role 가져오기
+        String loginId = jwtUtil.getLoginId(refreshToken);
         String role = jwtUtil.getRole(refreshToken);
 
-        String newAccessToken = jwtUtil.createJwt("access", username, role, ACCESS_EXPIRED_MS);
-        String newRefreshToken = jwtUtil.createJwt("refresh", username, role, REFRESH_EXPIRED_MS);
+        // 새로운 토큰(access, refresh) 생성
+        String newAccessToken = jwtUtil.createJwt("access", loginId, role, ACCESS_EXPIRED_MS);
+        String newRefreshToken = jwtUtil.createJwt("refresh", loginId, role, REFRESH_EXPIRED_MS);
 
+        // 이전의 refresh 토큰 삭제
         refreshTokenRepository.deleteByRefreshToken(refreshToken);
 
         RefreshToken refreshTokenEntity = RefreshToken.builder()
-                .username(username)
+                .loginId(loginId)
                 .refreshToken(newRefreshToken)
                 .expiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRED_MS))
                 .build();
 
+        // 생성한 refresh 토큰 저장
         refreshTokenRepository.save(refreshTokenEntity);
 
+        // access 토큰은 헤더에, refresh 토큰은 쿠키에 담아서 응답
         response.setHeader("Authorization", "Bearer " + newAccessToken);
-        response.addCookie(createCookie("refresh", newRefreshToken));
+        response.addCookie(createCookie(newRefreshToken));
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    private Cookie createCookie(String key, String value) {
-        Cookie cookie = new Cookie(key, value);
+    private Cookie createCookie(String value) {
+        Cookie cookie = new Cookie("refresh", value);
 
         cookie.setMaxAge(COOKIE_MAX_AGE);
         cookie.setHttpOnly(true); // 자바스크립트 공격 방지

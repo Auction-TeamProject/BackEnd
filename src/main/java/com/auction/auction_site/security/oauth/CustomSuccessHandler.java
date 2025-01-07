@@ -1,6 +1,5 @@
 package com.auction.auction_site.security.oauth;
 
-import com.auction.auction_site.config.ConstantConfig;
 import com.auction.auction_site.entity.RefreshToken;
 import com.auction.auction_site.repository.RefreshTokenRepository;
 import com.auction.auction_site.security.jwt.JWTUtil;
@@ -17,6 +16,9 @@ import java.util.Date;
 import static com.auction.auction_site.config.ConstantConfig.COOKIE_MAX_AGE;
 import static com.auction.auction_site.config.ConstantConfig.REFRESH_EXPIRED_MS;
 
+/**
+ * OAuth2 로그인 인증 성공시 실행되는 핸들러
+ */
 @Component
 @RequiredArgsConstructor
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -28,16 +30,16 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // OAuth2User
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
 
-        String username = customUserDetails.getUsername();
+        String loginId = customUserDetails.getLoginId();
 
         String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        String refreshToken = jwtUtil.createJwt("refresh", username, role, ConstantConfig.REFRESH_EXPIRED_MS);
+        String refreshToken = jwtUtil.createJwt("refresh", loginId, role, REFRESH_EXPIRED_MS);
 
         response.addCookie(createCookie("Authorization", refreshToken));
 
         RefreshToken refreshTokenEntity = RefreshToken.builder()
-                .username(username)
+                .loginId(loginId)
                 .refreshToken(refreshToken)
                 .expiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRED_MS))
                 .build();

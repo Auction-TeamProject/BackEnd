@@ -20,7 +20,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username; // 하나의 사용자가 여러 토큰을 발급 받을 수 있음
+    private String loginId; // 하나의 사용자가 여러 토큰을 발급 받을 수 있음
 
     private String refreshToken;
 
