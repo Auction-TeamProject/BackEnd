@@ -34,6 +34,6 @@ public class Product extends BaseTimeEntity {
     private int viewCount;
     @ManyToOne(fetch = FetchType.LAZY) // 다대일 관계
     @JoinColumn(name = "user_id", nullable = false)
-    private  User user;
+    private  Member member;
 
 }

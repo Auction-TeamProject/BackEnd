@@ -32,12 +32,12 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ProductApiResponse> createProduct(@RequestBody ProductRequestDto productRequestDto) {
 
-        String username = ((CustomOAuth2User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        String loginId = ((CustomOAuth2User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getLoginId();
      //   System.out.println("Principal Type: " + principal.getClass().getName());
-        if (username == null || username.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ProductApiResponse<>("error", "Username is missing or invalid", new ErrorResponse("BAD_REQUEST", "Username is missing or invalid")));
+        if (loginId == null || loginId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ProductApiResponse<>("error", "loginId is missing or invalid", new ErrorResponse("BAD_REQUEST", "LoginId is missing or invalid")));
         }
-        ProductResponseDto createdProduct = productService.createProduct(productRequestDto, username);
+        ProductResponseDto createdProduct = productService.createProduct(productRequestDto, loginId);
         // 응답 생성
         ProductApiResponse<ProductResponseDto> response = new ProductApiResponse<>(
                 "success",
@@ -73,11 +73,11 @@ public class ProductController {
  */
 @PatchMapping("/{id}")
 public ResponseEntity<ProductApiResponse>productUpdate(@PathVariable Long id, @RequestBody ProductRequestDto dto){
-    String username = ((CustomOAuth2User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-    if (username == null || username.trim().isEmpty()) {
-        return ResponseEntity.badRequest().body(new ProductApiResponse<>("error", "Username is missing or invalid", new ErrorResponse("BAD_REQUEST", "Username is missing or invalid")));
+    String loginId = ((CustomOAuth2User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getLoginId();
+    if (loginId == null || loginId.trim().isEmpty()) {
+        return ResponseEntity.badRequest().body(new ProductApiResponse<>("error", "LoginId is missing or invalid", new ErrorResponse("BAD_REQUEST", "LoginId is missing or invalid")));
     }
-    ProductResponseDto updatedProduct = productService.productUpdate(id, username, dto);
+    ProductResponseDto updatedProduct = productService.productUpdate(id, loginId, dto);
     // 응답 생성
     ProductApiResponse<ProductResponseDto> response = new ProductApiResponse<>(
             "success",
@@ -90,27 +90,25 @@ public ResponseEntity<ProductApiResponse>productUpdate(@PathVariable Long id, @R
 }
 
 
-/**
- * 상품 삭제
- */
-@DeleteMapping("/{id}")
-    public ResponseEntity<ProductApiResponse>productDelete(@PathVariable Long id){
+    /**
+     * 상품 삭제
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> productDelete(@PathVariable Long id) {
+        // 인증 정보 확인
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomOAuth2User)) {
+            throw new IllegalStateException("유효하지 않은 인증 정보입니다.");
+        }
 
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null || !(authentication.getPrincipal() instanceof CustomOAuth2User)) {
-        throw new IllegalStateException("유효하지 않은 인증 정보입니다.");
+        // 로그인 ID 가져오기
+        String loginId = ((CustomOAuth2User) authentication.getPrincipal()).getLoginId();
+
+        // 서비스 호출
+        return productService.deleteProduct(id, loginId);
+
     }
-    String username = ((CustomOAuth2User) authentication.getPrincipal()).getUsername();
 
-
-    ProductApiResponse<Void> response = productService.deleteProduct(id, username);
-    // 응답 처리
-    if ("SUCCESS".equals(response.getStatus())) {
-        return ResponseEntity.ok(response); // 삭제 성공
-    } else {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response); // 삭제 권한 없음
-    }
-}
 
 }
 
